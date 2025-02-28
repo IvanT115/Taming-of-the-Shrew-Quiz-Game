@@ -1,0 +1,354 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Taming of the Shrew Quiz Game</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f0f0f0;
+        }
+        .container {
+            background-color: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        }
+        .screen {
+            display: none;
+        }
+        .active {
+            display: block;
+        }
+        button {
+            background-color: #4CAF50;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+        .question-container {
+            margin: 20px 0;
+        }
+        .option {
+            margin: 10px 0;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        .option:hover {
+            background-color: #f0f0f0;
+        }
+        .score {
+            font-size: 1.2em;
+            font-weight: bold;
+            margin: 20px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Start Screen -->
+        <div id="startScreen" class="screen active">
+            <h1>Welcome to the Taming of the Shrew Quiz Game!</h1>
+            <button onclick="showScreen('rulesScreen')">Rules</button>
+            <button onclick="showScreen('difficultyScreen')">Start Game</button>
+        </div>
+
+        <!-- Rules Screen -->
+        <div id="rulesScreen" class="screen">
+            <h2>Rules</h2>
+            <ul>
+                <li>Choose your difficulty level: Easy, Medium, or Hard</li>
+                <li>Each question has 4 options with only one correct answer</li>
+                <li>Easy: 10 points per correct answer</li>
+                <li>Medium: 20 points per correct answer</li>
+                <li>Hard: 30 points per correct answer</li>
+                <li>Questions will be randomly ordered each time you play</li>
+                <li>No negative marking for wrong answers</li>
+            </ul>
+            <button onclick="showScreen('startScreen')">Back to Start</button>
+        </div>
+
+        <!-- Difficulty Selection Screen -->
+        <div id="difficultyScreen" class="screen">
+            <h2>Select Difficulty</h2>
+            <button onclick="startGame('easy')">Easy</button>
+            <button onclick="startGame('medium')">Medium</button>
+            <button onclick="startGame('hard')">Hard</button>
+            <button onclick="showScreen('startScreen')">Back</button>
+        </div>
+
+        <!-- Game Screen -->
+        <div id="gameScreen" class="screen">
+            <div class="score">Score: <span id="score">0</span></div>
+            <div id="questionContainer" class="question-container">
+                <h3 id="question"></h3>
+                <div id="options"></div>
+            </div>
+            <button onclick="nextQuestion()">Next Question</button>
+            <button onclick="endGame()">End Game</button>
+        </div>
+
+        <!-- Result Screen -->
+        <div id="resultScreen" class="screen">
+            <h2>Game Over!</h2>
+            <div id="finalScore"></div>
+            <button onclick="showScreen('startScreen')">Play Again</button>
+        </div>
+    </div>
+
+    <script>
+        const questions = {
+            easy: [
+                {
+                    question: "What rule does Baptista announce regarding his daughters?",
+                    options: ["Bianca must marry before Katherina", "Katherina must marry before Bianca", "Both must marry at the same time", "Neither is allowed to marry"],
+                    correct: 1
+                },
+                {
+                    question: "Which two men were originally competing for Bianca?",
+                    options: ["Grumio & Petruchio", "Lucentio & Hortensio", "Tranio & Baptista", "Sly & Vincentio"],
+                    correct: 1
+                },
+                {
+                    question: "Why has Petruchio come to Padua?",
+                    options: ["To challenge Baptista", "To find a wealthy wife", "To become a scholar", "To visit his cousin"],
+                    correct: 1
+                },
+                {
+                    question: "Who is Petruchio's friend who introduces him to marrying Katherine?",
+                    options: ["Grumio", "Hortensio", "Tranio", "Vincentio"],
+                    correct: 1
+                },
+                {
+                    question: "What is Katherine's reputation in Padua?",
+                    options: ["The obedient daughter", "The perfect wife", "The beauty of the town", "The shrew"],
+                    correct: 3
+                },
+                {
+                    question: "Why does Hortensio decide to disguise himself?",
+                    options: ["To spy on Bianca", "To become Bianca's tutor and woo her", "To escape from Katherina", "To trick Petruchio"],
+                    correct: 1
+                },
+                {
+                    question: "Why does Lucentio disguise himself as a tutor?",
+                    options: ["To avoid talking to Bianca", "To get closer to Bianca and woo her in secret", "To prove his intelligence to Baptista", "To make money to invest in stocks"],
+                    correct: 1
+                },
+                {
+                    question: "What literary device is present when Baptista says he will not allow Bianca to marry until Katherina is wed, but the audience knows that Bianca already has several suitors while Katherina does not?",
+                    options: ["Foreshadowing", "Hyperbole", "Irony", "Allusion"],
+                    correct: 2
+                },
+                {
+                    question: "Why does Bianca initially appear to be the more desirable daughter compared to Katherine?",
+                    options: ["She is wealthier and more educated", "She is obedient and a nice person", "She is older and more experienced in courtship", "She is more outspoken and independent"],
+                    correct: 1
+                },
+                {
+                    question: "What literary device is used when the merchant pretends to be Vincentio?",
+                    options: ["Aside", "Soliloquy", "Setting", "Disguise"],
+                    correct: 3
+                }
+            ],
+            medium: [
+                {
+                    question: "How does Vincentio react when he sees Tranio dressed as Lucentio?",
+                    options: ["He is pleased", "He is confused and enraged", "He joins in the deception", "He challenges Tranio to a duel"],
+                    correct: 1
+                },
+                {
+                    question: "What bet do the men (Lucentio, Hortensio, and Petruchio) make?",
+                    options: ["Who can create the best love poem", "Who can drink the most wine", "Whose wife will come first when called", "Who will be the richest"],
+                    correct: 2
+                },
+                {
+                    question: "Who is the only wife that obeys?",
+                    options: ["Bianca", "None of them", "The Widow", "Katherine"],
+                    correct: 3
+                },
+                {
+                    question: "What happens during the wedding ceremony?",
+                    options: ["Petruchio behaves disruptively, cursing and hitting the priest", "Katherina refuses to say her vows", "Baptista calls off the wedding", "Petruchio apologizes for his earlier behavior"],
+                    correct: 0
+                },
+                {
+                    question: "What does Petruchio announce immediately after the wedding?",
+                    options: ["That he and Katherina will leave immediately", "That he will host a feast for everyone", "That he has changed his mind about marriage", "That he will give Katherina a gift"],
+                    correct: 0
+                },
+                {
+                    question: "In Act 1, Scene 1, when Tranio whispers to Lucentio about their plan while the other characters are present but do not hear, this is an example of what literary device?",
+                    options: ["Soliloquy", "Aside", "Metaphor", "Alliteration"],
+                    correct: 1
+                },
+                {
+                    question: "In the line, 'Knock sir? Whom should I knock?' what literary device is Grumio using to create humor?",
+                    options: ["Hyperbole", "Irony", "Pun", "Metaphor"],
+                    correct: 2
+                },
+                {
+                    question: "What does Petruchio metaphorically compare Katherine's voice to when he says, 'She sings as sweetly as a nightingale'?",
+                    options: ["A bird", "A storm", "A lion", "A flower"],
+                    correct: 0
+                },
+                {
+                    question: "What causes Baptista to insist that Katherine must marry before Bianca?",
+                    options: ["He wants to ensure Bianca's happiness", "He believes Katherine's marriage will improve her temperament", "He fears Katherina will never find a husband if Bianca marries first", "He wants to follow the social normalaties of the time"],
+                    correct: 2
+                },
+                {
+                    question: "What does Hortensio's decision to marry the Widow show about his character?",
+                    options: ["He values wealth over love", "He is easily swayed by looks", "He is willing to settle for a less desirable match", "He is desperate to escape his rivalry with Lucentio"],
+                    correct: 2
+                }
+            ],
+            hard: [
+                {
+                    question: "What literary device is used in Baptista's declaration that Katherina must marry first?",
+                    options: ["Alliteration", "Metaphor", "Irony", "Hyperbole"],
+                    correct: 2
+                },
+                {
+                    question: "What is Katherine's main argument in her final speech?",
+                    options: ["Wives should obey their husbands", "Women are equal to men in marriage", "Love should be freely given, not forced", "Marriage is a game of wit"],
+                    correct: 0
+                },
+                {
+                    question: "In the line, 'She hung upon my neck, and kiss on kiss She swore her love with oath on oath,' what is Katherine's affection being compared to?",
+                    options: ["A storm", "A chain", "A song", "A battle"],
+                    correct: 1
+                },
+                {
+                    question: "What is Petruchio's main motivation for marrying Katherina?",
+                    options: ["He is genuinely in love with her", "He wants to gain access to Baptista's wealth", "He enjoys the challenge of taming a shrew", "He wants to prove his dominance over other men"],
+                    correct: 1
+                },
+                {
+                    question: "What is the main theme in Katherine's final speech about wifely obedience?",
+                    options: ["The importance of mutual respect in marriage", "Females should submit to their husbands", "The power of love to transform individuals", "The dangers of pride and stubbornness"],
+                    correct: 1
+                },
+                {
+                    question: "What literary device is used when Petruchio describes Katherine as 'modest as the dove' even with her reputation as a shrew?",
+                    options: ["Irony", "Metaphor", "Hyperbole", "Allusion"],
+                    correct: 0
+                },
+                {
+                    question: "What literary device is used when Petruchio's exaggerated behavior at the wedding is described as 'mad' by the other characters?",
+                    options: ["Hyperbole", "Metaphor", "Irony", "Allusion"],
+                    correct: 0
+                },
+                {
+                    question: "What does Petruchio's decision to arrive late and dressed inappropriately for his wedding reveal about his approach to taming Katherine?",
+                    options: ["He wants to humiliate her publicly", "He is testing her patience", "He is mocking Baptista", "He is trying to make a statement about his wealth"],
+                    correct: 1
+                },
+                {
+                    question: "What does Bianca's behavior toward Lucentio and Hortensio reveal about her true feelings about marriage?",
+                    options: ["She is genuinely interested in finding love", "She is more interested in maintaining her independence", "She is using her suitors to gain social status", "She is indifferent to marriage and only obeys her father's wishes"],
+                    correct: 2
+                },
+                {
+                    question: "What does Petruchio's treatment of Katherina (e.g., depriving her of food, sleep, and comfort) reveal about his understanding of power in marriage?",
+                    options: ["He believes power in marriage comes from mutual respect and compromise", "He sees marriage as a battle where one partner must control the other", "He thinks love and kindness are the keys to a successful marriage", "He views marriage as a partnership where both spouses share equal rights"],
+                    correct: 1
+                }
+            ]
+        };
+
+        let currentDifficulty = '';
+        let currentQuestions = [];
+        let currentQuestionIndex = 0;
+        let score = 0;
+
+        // Fisher-Yates shuffle algorithm
+        function shuffleArray(array) {
+            for (let i = array.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [array[i], array[j]] = [array[j], array[i]];
+            }
+            return array;
+        }
+
+        function showScreen(screenId) {
+            document.querySelectorAll('.screen').forEach(screen => screen.classList.remove('active'));
+            document.getElementById(screenId).classList.add('active');
+        }
+
+        function startGame(difficulty) {
+            currentDifficulty = difficulty;
+            // Create a copy of questions and shuffle them
+            currentQuestions = shuffleArray([...questions[difficulty]]);
+            currentQuestionIndex = 0;
+            score = 0;
+            document.getElementById('score').textContent = score;
+            showQuestion();
+            showScreen('gameScreen');
+        }
+
+        function showQuestion() {
+            const question = currentQuestions[currentQuestionIndex];
+            document.getElementById('question').textContent = question.question;
+            
+            // Create a copy of options and shuffle them
+            const shuffledOptions = shuffleArray([...question.options]);
+            // Keep track of new positions for correct answer
+            const newCorrectIndex = shuffledOptions.indexOf(question.options[question.correct]);
+            
+            const optionsContainer = document.getElementById('options');
+            optionsContainer.innerHTML = '';
+            
+            shuffledOptions.forEach((option, index) => {
+                const div = document.createElement('div');
+                div.className = 'option';
+                div.textContent = option;
+                div.onclick = () => checkAnswer(index, newCorrectIndex);
+                optionsContainer.appendChild(div);
+            });
+        }
+
+        function checkAnswer(selectedIndex, correctIndex) {
+            if (selectedIndex === correctIndex) {
+                const points = {
+                    'easy': 10,
+                    'medium': 20,
+                    'hard': 30
+                }[currentDifficulty];
+                score += points;
+                document.getElementById('score').textContent = score;
+            }
+            
+            document.querySelectorAll('.option').forEach((option, index) => {
+                option.style.backgroundColor = index === correctIndex ? '#90EE90' : 
+                                            (index === selectedIndex && selectedIndex !== correctIndex) ? '#FFB6C1' : '';
+                option.onclick = null;
+            });
+        }
+
+        function nextQuestion() {
+            currentQuestionIndex++;
+            if (currentQuestionIndex < currentQuestions.length) {
+                showQuestion();
+            } else {
+                endGame();
+            }
+        }
+
+        function endGame() {
+            document.getElementById('finalScore').textContent = `Final Score: ${score}`;
+            showScreen('resultScreen');
+        }
+    </script>
+</body>
+</html>
